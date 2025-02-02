@@ -2,13 +2,24 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 
-long acceleration;
-long rotational;
+float acceleration;
+float rotational;
+float jerk;
+float force;
+
+const int fsrpin = 2;  // Pin connected to the FSR
+const float VCC = 3.3; // Voltage supplied to the FSR circuit
+const float R = 10000; // Value of the fixed resistor in the voltage divider (10kΩ)
+
+float previousAcceleration = 0;
+unsigned long previousTime = 0;
 
 Adafruit_MPU6050 mpu;
 
 void setup(void) {
 	Serial.begin(115200);
+
+  pinMode(fsrpin, INPUT); // Set the FSR pin as an input
 
 	// Try to initialize!
 	if (!mpu.begin()) {
@@ -36,8 +47,8 @@ void loop() {
 	sensors_event_t a, g, temp;
 	mpu.getEvent(&a, &g, &temp);
 
-  acceleration = sqrt(a.acceleration.x *a.acceleration.x + a.acceleration.y * a.acceleration.y + a.acceleration.z + a.acceleration.z);
-  rotational = sqrt(g.gyro.x *g.gyro.x + g.gyro.y * g.gyro.y + g.gyro.z + g.gyro.z);
+  acceleration = abs(sqrt(a.acceleration.x *a.acceleration.x + a.acceleration.y * a.acceleration.y + a.acceleration.z * a.acceleration.z)-9);
+  rotational = sqrt(g.gyro.x *g.gyro.x + g.gyro.y * g.gyro.y + g.gyro.z * g.gyro.z);
 
   if (acceleration > 10000)
     acceleration = 0;
@@ -45,25 +56,34 @@ void loop() {
   if (rotational > 10000)
     rotational = 0;
 
-	/* Print out the values */
-	// Serial.print("Acceleration X: ");
-	// Serial.print(a.acceleration.x);
-	// Serial.print(", Y: ");
-	// Serial.print(a.acceleration.y);
-	// Serial.print(", Z: ");
-	// Serial.print(a.acceleration.z);
+  int rawValue = analogRead(fsrpin); // Read the raw analog value from the FSR
+  float voltage = rawValue * (VCC / 4095.0); // Convert the raw value to voltage
+  float fsrResistance = (VCC - voltage) * R / voltage; // Calculate the FSR resistance
+
+  force = exp(log(49.683*pow(1000*acceleration, 0.68)/R/1000)/0.295);
+
+  unsigned long currentTime = millis();
+  float dt = (currentTime - previousTime) / 1000.0;
+
+  if (previousTime != 0) { // Skip the first iteration
+    jerk = abs((acceleration - previousAcceleration) / dt);
+  }
+
+  // Update previous acceleration and time
+  previousAcceleration = acceleration;
+  previousTime = currentTime;
+
   Serial.print(acceleration);
 	Serial.println(" m/s^2");
 
-	// Serial.print("Rotation X: ");
-	// Serial.print(g.gyro.x);
-	// Serial.print(", Y: ");
-	// Serial.print(g.gyro.y);
-	// Serial.print(", Z: ");
-	// Serial.print(g.gyro.z);
   Serial.print(rotational);
 	Serial.println(" rad/s");
 
+  Serial.print(jerk);
+  Serial.println("m/s^3");
+
+  Serial.print(force);
+  Serial.println("N")
 
 	Serial.println("");
 	delay(100);
