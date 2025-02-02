@@ -7,7 +7,8 @@ float rotational;
 float jerk;
 float force;
 
-const int fsrpin = 2;  // Pin connected to the FSR
+
+const int fsrPins[4] = {34, 35, 32, 33};
 const float VCC = 3.3; // Voltage supplied to the FSR circuit
 const float R = 10000; // Value of the fixed resistor in the voltage divider (10kΩ)
 
@@ -19,7 +20,9 @@ Adafruit_MPU6050 mpu;
 void setup(void) {
 	Serial.begin(115200);
 
-  pinMode(fsrpin, INPUT); // Set the FSR pin as an input
+  for (int i = 0; i < 4; i++) {
+      pinMode(fsrPins[i], INPUT);
+  }
 
 	// Try to initialize!
 	if (!mpu.begin()) {
@@ -43,6 +46,10 @@ void setup(void) {
 }
 
 void loop() {
+
+  float weight[4];
+
+
 	/* Get new sensor events with the readings */
 	sensors_event_t a, g, temp;
 	mpu.getEvent(&a, &g, &temp);
@@ -56,11 +63,22 @@ void loop() {
   if (rotational > 10000)
     rotational = 0;
 
-  int rawValue = analogRead(fsrpin); // Read the raw analog value from the FSR
-  float voltage = rawValue * (VCC / 4095.0); // Convert the raw value to voltage
-  float fsrResistance = (VCC - voltage) * R / voltage; // Calculate the FSR resistance
+  for (int i = 0; i < 4; i++) {
+    int rawValue = analogRead(fsrPins[i]); // Read the raw analog value from the FSR
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.print(rawValue);
+    Serial.println("N");    float voltage = rawValue * (VCC / 4095.0); // Convert the raw value to voltage
+    float fsrResistance = (VCC - voltage) * R / voltage; // Calculate the FSR resistance
 
-  force = acceleration*pow(49683/fsrResistance ,1.4706);
+    float force = (1000.0 / fsrResistance) * 1000.0; 
+
+    //force = acceleration*pow(49683/fsrResistance ,1.4706);
+    weight[i] = force;
+
+   }
+
+
 
   unsigned long currentTime = millis();
   float dt = (currentTime - previousTime) / 1000.0;
@@ -76,11 +94,19 @@ void loop() {
   Serial.print(acceleration);
 	Serial.println(" m/s^2");
 
-  Serial.print(jerk);
+  Serial.print(jerk);;
   Serial.println("m/s^3");
 
-  Serial.print(force);
-  Serial.println("N");
+  // Serial.print(force);
+  // Serial.println("N");
+  // for (int i = 0; i < 4; i++) {
+
+  //   Serial.print(i);
+  //   Serial.print(": ");
+  //   Serial.print(weight[i]);
+  //   Serial.println("N");
+
+  // }
 
 	Serial.println("");
 	delay(100);
