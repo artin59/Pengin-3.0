@@ -60,7 +60,7 @@ void loop() {
   float voltage = rawValue * (VCC / 4095.0); // Convert the raw value to voltage
   float fsrResistance = (VCC - voltage) * R / voltage; // Calculate the FSR resistance
 
-  force = exp(log(49.683*pow(1000*acceleration, 0.68)/R/1000)/0.295);
+  force = acceleration*pow(49683/fsrResistance ,1.4706);
 
   unsigned long currentTime = millis();
   float dt = (currentTime - previousTime) / 1000.0;
@@ -76,14 +76,11 @@ void loop() {
   Serial.print(acceleration);
 	Serial.println(" m/s^2");
 
-  Serial.print(rotational);
-	Serial.println(" rad/s");
-
   Serial.print(jerk);
   Serial.println("m/s^3");
 
   Serial.print(force);
-  Serial.println("N")
+  Serial.println("N");
 
 	Serial.println("");
 	delay(100);
