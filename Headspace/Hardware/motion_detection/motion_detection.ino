@@ -1,6 +1,12 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
+#include <WiFi.h>
+
+const char* ssid = "Arnav";
+const char* password = "12345678";
+
+WiFiServer server(80);
 
 float acceleration;
 float rotational;
@@ -10,7 +16,7 @@ float force;
 
 const int fsrPins[4] = {34, 35, 32, 33};
 const float VCC = 3.3; // Voltage supplied to the FSR circuit
-const float R = 10000; // Value of the fixed resistor in the voltage divider (10kΩ)
+const float R = 10000; // Value of the fixed resistor in the voltage divider (10kÎ©)
 
 float previousAcceleration = 0;
 unsigned long previousTime = 0;
@@ -19,6 +25,18 @@ Adafruit_MPU6050 mpu;
 
 void setup(void) {
 	Serial.begin(115200);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting...");
+  }
+
+  Serial.print("Connected! IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  server.begin();
 
   for (int i = 0; i < 4; i++) {
       pinMode(fsrPins[i], INPUT);
@@ -46,6 +64,12 @@ void setup(void) {
 }
 
 void loop() {
+
+  WiFiClient client = server.available();
+  if (client) {
+    client.println("Hello from ESP!");
+    delay(1000);
+  }
 
   float weight[4];
 
@@ -98,15 +122,15 @@ void loop() {
   Serial.println("m/s^3");
 
   // Serial.print(force);
-  // Serial.println("N");
-  // for (int i = 0; i < 4; i++) {
+  Serial.println("N");
+  for (int i = 0; i < 4; i++) {
 
-  //   Serial.print(i);
-  //   Serial.print(": ");
-  //   Serial.print(weight[i]);
-  //   Serial.println("N");
+  Serial.print(i);
+  Serial.print(": ");
+  Serial.print(weight[i]);
+  Serial.println("N");
 
-  // }
+   }
 
 	Serial.println("");
 	delay(100);
