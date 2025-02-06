@@ -1,32 +1,41 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import Coach from "../Pages/Coach"
+import Player from "../Pages/Player"
+import Doctor from "../Pages/Doctor"
+
+
 
 const Profile = () => {
   const { user, isAuthenticated, isLoading } = useAuth0();
-  const navigate = useNavigate();
 
   if (isLoading) {
     return <div>Loading ...</div>;
   }
+  
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
+  return (
+    user !== undefined && isAuthenticated && (
+        <div>
+            
+            {(() => {
 
-        switch(user.email) {
-            case "artinkiany59@gmail.com":
-                navigate("/coach");
-                break;
-            case "l9ligma@gmail.com":
-                navigate("/player");
-                break;
-            default:
-                navigate("/");
-                break;
-        }
-    }
-  }, [user, isAuthenticated, isLoading, navigate]);
+                switch(user.name){
 
+                    case "artinkiany59@gmail.com":
+                        return <Coach/>
+                    case "l9ligma@gmail.com":
+                        return <Player/>
+                    case "artin59@my.yorku.ca":
+                        return <Doctor/>
+                    default:
+                        return <h1>Not in Records</h1>
+                }
+
+            })()}
+    </div>
+    )
+  );
 };
 
 export default Profile;
