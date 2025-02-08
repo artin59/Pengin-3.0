@@ -1,21 +1,26 @@
 import Player from "./Player"
 import {useState} from 'react'
+import { useLocalStorage } from "../Utils/useLocalStorage"
 import "./Doctor.css"
 const Doctor = () => {
 
   const [show, setShow] = useState(false);
-  const [val, setValue] = useState('');
+  const [note, setNote] = useState('');
 
-  const handleNote = () => {
-    console.log(val);
-  }
-
+  const {setItem} = useLocalStorage('note');
 
   const showPlayer = () => {
     if (show)
       setShow(false);
     else
       setShow(true);
+  }
+
+
+  const callBoth = () => {
+
+    setItem(note);
+    setNote("");
   }
 
   return (
@@ -26,8 +31,8 @@ const Doctor = () => {
       {show && (<Player/>)}
 
       <p>Notes</p>
-      <textarea value={val} rows={4} cols={50} onChange={(e)=>setValue(e.target.value)}></textarea>
-      <button className="submitBtn" onClick={handleNote}>Submit</button>
+      <textarea value={note} rows={4} cols={50} onChange={(e)=>setNote(e.target.value)}></textarea>
+      <button className="submitBtn" onClick={callBoth}>Submit</button>
 
     </div>
   )
