@@ -5,6 +5,13 @@
     align-items: center;
 }
 
+.DoctorsNoteSubmit{
+    display: flex;
+    flex-direction: column;
+    margin-top: 1rem;
+    align-items: center;
+}
+
 .submitBtn{
     margin-top: 1rem;
 }
