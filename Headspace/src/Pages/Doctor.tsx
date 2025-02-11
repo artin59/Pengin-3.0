@@ -18,7 +18,6 @@ const Doctor = () => {
 
 
   const callBoth = () => {
-
     setItem(note);
     setNote("");
   }
