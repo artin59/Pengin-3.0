@@ -5,8 +5,8 @@
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
 
-const char* ssid = "Khoshgele";
-const char* password = "Artin2004?";
+const char* ssid = "name";
+const char* password = "pass";
 
 WebSocketsServer webSocket = WebSocketsServer(80);
 
