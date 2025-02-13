@@ -2,11 +2,14 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 #include <WiFi.h>
+#include <WebSocketsServer.h>
+#include <ArduinoJson.h>
 
-const char* ssid = "Arnav";
-const char* password = "12345678";
+const char* ssid = "Khoshgele";
+const char* password = "Artin2004?";
 
-WiFiServer server(80);
+WebSocketsServer webSocket = WebSocketsServer(80);
+
 
 float acceleration;
 float rotational;
@@ -23,21 +26,51 @@ unsigned long previousTime = 0;
 
 Adafruit_MPU6050 mpu;
 
+
+void webSocketEvent (uint8_t num, WStype_t type, uint8_t* payload, size_t lenght){
+
+  switch(type){
+    case WStype_CONNECTED:
+      Serial.println("Client Connected");
+      break;
+    case WStype_DISCONNECTED:
+      Serial.println("Client Disconencted");
+      break;
+  }
+}
+
+void sendSensorData(float jerk, float weight[4]){
+
+  StaticJsonDocument<200> jsonDoc;
+
+  jsonDoc["jerk"] = jerk;
+
+  JsonArray array = jsonDoc.createNestedArray("forces");
+  for (int i = 0; i < 4; i++){
+    array.add(weight[i]);
+  }
+
+  String jsonString ="";
+  serializeJson(jsonDoc, jsonString);
+  Serial.println(jsonString);
+  webSocket.broadcastTXT(jsonString);
+
+}
+
+
 void setup(void) {
 	Serial.begin(115200);
 
-  WiFi.begin(ssid, password);
+    // Connect to Wi-Fi
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi...");
+    }
+    Serial.println("Connected to WiFi");
+    Serial.println(WiFi.localIP()); // Print the IP address of the ESP32
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting...");
-  }
-
-  Serial.print("Connected! IP Address: ");
-  Serial.println(WiFi.localIP());
-
-  server.begin();
-
+    
   for (int i = 0; i < 4; i++) {
       pinMode(fsrPins[i], INPUT);
   }
@@ -60,17 +93,17 @@ void setup(void) {
 	// set filter bandwidth to 21 Hz
 	mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
+  // Start WebSocket server
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+
 	delay(100);
 }
 
+
 void loop() {
 
-  WiFiClient client = server.available();
-  if (client) {
-    client.println("Hello from ESP!");
-    delay(1000);
-  }
-
+  webSocket.loop();
   float weight[4];
 
 
@@ -89,20 +122,17 @@ void loop() {
 
   for (int i = 0; i < 4; i++) {
     int rawValue = analogRead(fsrPins[i]); // Read the raw analog value from the FSR
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.print(rawValue);
-    Serial.println("N");    float voltage = rawValue * (VCC / 4095.0); // Convert the raw value to voltage
+    // Serial.print(i);
+    // Serial.print(": ");
+    // Serial.print(rawValue);
+    // Serial.println("N");    
+    float voltage = rawValue * (VCC / 4095.0); // Convert the raw value to voltage
     float fsrResistance = (VCC - voltage) * R / voltage; // Calculate the FSR resistance
-
     float force = (1000.0 / fsrResistance) * 1000.0; 
-
     //force = acceleration*pow(49683/fsrResistance ,1.4706);
     weight[i] = force;
 
    }
-
-
 
   unsigned long currentTime = millis();
   float dt = (currentTime - previousTime) / 1000.0;
@@ -115,23 +145,23 @@ void loop() {
   previousAcceleration = acceleration;
   previousTime = currentTime;
 
-  Serial.print(acceleration);
-	Serial.println(" m/s^2");
+  sendSensorData(jerk, weight);
 
-  Serial.print(jerk);;
-  Serial.println("m/s^3");
+  // Serial.print(acceleration);
+	// Serial.println(" m/s^2");
 
-  // Serial.print(force);
-  Serial.println("N");
-  for (int i = 0; i < 4; i++) {
+  // Serial.print(jerk);;
+  // Serial.println("m/s^3");
 
-  Serial.print(i);
-  Serial.print(": ");
-  Serial.print(weight[i]);
-  Serial.println("N");
+  // for (int i = 0; i < 4; i++) {
+  //   Serial.print(i);
+  //   Serial.print(": ");
+  //   Serial.print(weight[i]);
+  //   Serial.println("N");
+  //  }
 
-   }
+
 
 	Serial.println("");
-	delay(100);
+	delay(200);
 }

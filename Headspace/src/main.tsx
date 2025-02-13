@@ -6,14 +6,14 @@ import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-<Auth0Provider
-    domain="dev-lbhjucs031bg6ksr.us.auth0.com"
-    clientId="mZ2HyPVIGoSc02d3KmUOb2U5rFi2jV82"
-    authorizationParams={{
-      redirect_uri: window.location.origin
-    }}
-  >
-    <App />
-  </Auth0Provider>
+    <Auth0Provider
+      domain="dev-lbhjucs031bg6ksr.us.auth0.com"
+      clientId="mZ2HyPVIGoSc02d3KmUOb2U5rFi2jV82"
+      authorizationParams={{
+        redirect_uri: window.location.origin
+      }}
+    >
+      <App />
+    </Auth0Provider>
   </StrictMode>
 )
